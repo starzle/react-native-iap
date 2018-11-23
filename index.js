@@ -122,6 +122,16 @@ export const buyProduct = async(sku) => Platform.select({
   android: async() => RNIapModule.buyItemByType(ANDROID_ITEM_TYPE_IAP, sku, null, 0),
 })();
 
+export const watchAfterCancel = (sku) => Platform.select({
+  ios: () => RNIapIos.watchAfterCancel(sku),
+  android: () => {},
+})();
+
+export const cancelWatchAfterCancel = (sku) => Platform.select({
+  ios: () => RNIapIos.cancelWatchAfterCancel(sku),
+  android: () => {},
+})();
+
 /**
  * Buy a product with a specified quantity (iOS only)
  * @param {string} sku The product's sku/ID

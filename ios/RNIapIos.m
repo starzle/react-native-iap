@@ -117,6 +117,37 @@ RCT_EXPORT_METHOD(buyProduct:(NSString*)sku
   }
 }
 
+RCT_EXPORT_METHOD(watchAfterCancel:(NSString*)sku
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+  autoReceiptConform = true;
+  SKProduct *product;
+  for (SKProduct *p in validProducts) {
+    if([sku isEqualToString:p.productIdentifier]) {
+      product = p;
+      break;
+    }
+  }
+  if (product) {
+    [self addPromiseForKey:RCTKeyForInstanceWatchAfterCancel(product.productIdentifier) resolve:resolve reject:reject];
+  } else {
+    reject(@"E_DEVELOPER_ERROR", @"Invalid product ID.", nil);
+  }
+}
+
+RCT_EXPORT_METHOD(cancelWatchAfterCancel:(NSString*)sku) {
+  SKProduct *product;
+  for (SKProduct *p in validProducts) {
+    if([sku isEqualToString:p.productIdentifier]) {
+      product = p;
+      break;
+    }
+  }
+  if (product) {
+    [promisesByKey removeObjectForKey:RCTKeyForInstanceWatchAfterCancel(product.productIdentifier)];
+  }
+}
+
 RCT_EXPORT_METHOD(buyProductWithQuantityIOS:(NSString*)sku
                   quantity:(NSInteger*)quantity
                   resolve:(RCTPromiseResolveBlock)resolve
@@ -287,6 +318,7 @@ RCT_EXPORT_METHOD(clearProducts) {
   NSURL *receiptUrl = [[NSBundle mainBundle] appStoreReceiptURL];
   NSDictionary* purchase = [self getPurchaseData:transaction];
   [self resolvePromisesForKey:RCTKeyForInstance(transaction.payment.productIdentifier) value:purchase];
+  [self resolvePromisesForKey:RCTKeyForInstanceWatchAfterCancel(transaction.payment.productIdentifier) value:purchase];
 }
 
 -(NSString *)standardErrorCode:(int)code {
@@ -447,6 +479,11 @@ RCT_EXPORT_METHOD(clearProducts) {
 static NSString *RCTKeyForInstance(id instance)
 {
     return [NSString stringWithFormat:@"%p", instance];
+}
+
+static NSString *RCTKeyForInstanceWatchAfterCancel(NSString* productIdentifier)
+{
+    return [NSString stringWithFormat:@"%@_watch_after_cancel", productIdentifier];
 }
 
 @end
